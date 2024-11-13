@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import re
+from tkinter import messagebox
 
 # Theme configuration
 ctk.set_appearance_mode("dark")
@@ -22,41 +23,28 @@ class FilterApp(ctk.CTk):
         )
         title_label.pack(pady=20)
 
-        # Filter input box
+        # Text box for filter input
         self.filter_input = ctk.CTkEntry(
             self,
-            placeholder_text="Enter a Filter Rule",
-            width=400,
+            placeholder_text="Enter filter rule (e.g., Ia >= 5)",
             font=("JetBrains Mono", 15),
             justify="center"
         )
-        self.filter_input.pack(pady=(10, 5))  # Positioned above Add Filter button
+        self.filter_input.pack(pady=10)
 
-        # Add Filter Button
-        add_button = ctk.CTkButton(
-            self,
-            text="Add Filter",
-            font=("JetBrains Mono", 15),
-            command=self.verify_and_add_filter,
-            fg_color="#024bbf",
-            hover_color="#0073e6"
-        )
-        add_button.pack(pady=10)
-
-        # Frame principal
+        # Main frame
         self.filters_frame = ctk.CTkFrame(self, corner_radius=15)
         self.filters_frame.pack(pady=10, padx=20, fill="both", expand=True)
 
-        # Canvas e Scrollbar
+        # Canvas and Scrollbar
         self.canvas = ctk.CTkCanvas(
-            self.filters_frame, 
-            highlightthickness=0, 
-            bg="#1a1a1a",
-            borderwidth=20
+            self.filters_frame,
+            highlightthickness=0,
+            bg="#1a1a1a"
         )
         self.scrollbar = ctk.CTkScrollbar(
-            self.filters_frame, 
-            orientation="vertical", 
+            self.filters_frame,
+            orientation="vertical",
             command=self.canvas.yview
         )
         self.scrollable_frame = ctk.CTkFrame(
@@ -75,80 +63,75 @@ class FilterApp(ctk.CTk):
             (0, 0),
             window=self.scrollable_frame,
             anchor="nw",
-            width=self.filters_frame.winfo_width()  # Define largura igual ao frame pai
+            width=self.filters_frame.winfo_width()
         )
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # Bind para atualizar a largura da janela do canvas quando o frame pai for redimensionado
+        # Bind to update canvas width when parent frame is resized
         self.filters_frame.bind("<Configure>", self.on_frame_configure)
 
-        # Listas para referências
+        # Lists for references
         self.filter_entries = []
         self.filter_checkboxes = []
 
+        # Add initial filter
+        self.add_filter()
+
+        # Button to add filter
+        add_button = ctk.CTkButton(
+            self,
+            text="Add Filter",
+            font=("JetBrains Mono", 15),
+            command=self.add_filter_with_validation,
+            fg_color="#024bbf",
+            hover_color="#0073e6"
+        )
+        add_button.pack(pady=10)
+
     def on_frame_configure(self, event=None):
-        # Atualiza a largura da janela do canvas quando o frame pai é redimensionado
+        # Update canvas window width when parent frame is resized
         self.canvas.itemconfig("win", width=event.width)
 
-    def verify_and_add_filter(self):
-        filter_rule = self.filter_input.get().strip()
-        if self.is_valid_filter_rule(filter_rule):
-            self.add_filter(filter_rule)
-            self.filter_input.delete(0, 'end')  # Limpa a entrada após adicionar
+    def add_filter_with_validation(self) -> None:
+        # Validate filter rule input before adding
+        rule = self.filter_input.get()
+        if self.is_valid_filter_rule(rule):
+            self.add_filter(rule)
+            self.filter_input.delete(0, 'end')  # Clear input after adding
         else:
-            self.show_warning()
+            self.show_error_message("Invalid filter format.\nUse format: 'In >= N' where:\n - 'I' is a prefix\n - 'n' is a lowercase letter\n - '>=', '<=', '=', '<', or '>'\n - 'N' is a positive integer.")
 
     def is_valid_filter_rule(self, rule: str) -> bool:
-        pattern = r"^I[a-z]\s*(>|=|<)\s*\d+$"
+        # Regular expression for pattern: In >= N
+        pattern = r"^I[a-z]\s*(>=|<=|=|>|<)\s*\d+$"
         return bool(re.match(pattern, rule))
 
-    def show_warning(self):
-        # Janela de aviso
-        warning_window = ctk.CTkToplevel(self)
-        warning_window.geometry("600x220")
-        warning_window.title("Invalid Filter Rule")
-        warning_window.configure(bg="#1a1a1a")
+    def show_error_message(self, message: str) -> None:
+        # Display error message in a popup window
+        messagebox.showerror("Invalid Filter Rule", message)
 
-        # Mensagem de aviso
-        warning_message = ctk.CTkLabel(
-            warning_window,
-            text="Invalid rule format.\nUse: I[letter] [operator] [number]\nWhere: [letter] is a lower case letter,\n[operator] is <, > or = and\n[number] is a positive integer.\nExample: Ia > 5",
-            font=("JetBrains Mono", 13),
-            wraplength=500,
-        )
-        warning_message.pack(pady=20, padx=20)
-
-        # Botão para fechar a janela
-        close_button = ctk.CTkButton(
-            warning_window,
-            text="Close",
-            font=("JetBrains Mono", 12),
-            fg_color="#024bbf",
-            hover_color="#0073e6",
-            command=warning_window.destroy
-        )
-        close_button.pack(pady=10)
-
-    def add_filter(self, rule: str) -> None:
-        # Frame para a linha do filtro
+    def add_filter(self, rule_text: str = "") -> None:
+        # Frame for filter row
         filter_row = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
         filter_row.pack(fill="x", pady=5)
 
-        # Frame central que contém os elementos do filtro
+        # Frame that holds filter elements
         filter_container = ctk.CTkFrame(filter_row, fg_color="transparent")
         filter_container.pack(expand=True)
 
-        # Label para exibir a regra do filtro
-        filter_label = ctk.CTkLabel(
+        # Entry for filter (disabled to prevent modification)
+        filter_entry = ctk.CTkEntry(
             filter_container,
-            text=rule,
             font=("JetBrains Mono", 15),
+            width=250,
             justify="center"
         )
-        filter_label.pack(side="left", padx=(0, 10))
+        filter_entry.insert(0, rule_text)
+        filter_entry.configure(state="disabled")  # Prevent user input
+        filter_entry.pack(side="left", padx=(0, 10))
 
         # Checkbox
         filter_checkbox = ctk.CTkCheckBox(
@@ -161,7 +144,7 @@ class FilterApp(ctk.CTk):
         )
         filter_checkbox.pack(side="left", padx=10)
 
-        # Botão de remover
+        # Remove button
         remove_button = ctk.CTkButton(
             filter_container,
             text="-",
@@ -174,8 +157,8 @@ class FilterApp(ctk.CTk):
         )
         remove_button.pack(side="left", padx=(10, 0))
 
-        # Adiciona às listas
-        self.filter_entries.append(filter_label)
+        # Add to lists
+        self.filter_entries.append(filter_entry)
         self.filter_checkboxes.append(filter_checkbox)
 
     def remove_filter(self, filter_frame: ctk.CTkFrame) -> None:
