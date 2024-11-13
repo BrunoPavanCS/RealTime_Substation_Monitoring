@@ -1,0 +1,12 @@
+{
+    "id": [
+        {
+            "filter":"Ia > 20",
+            "state": true
+        },
+        {
+            "filter":"Ib < 10",
+            "state": false
+        }
+    ]
+}

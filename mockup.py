@@ -5,11 +5,12 @@ import time
 from typing import Dict
 
 # Broadcast IP and UDP port configuration
-BROADCAST_IP = '255.255.255.255'
+BROADCAST_IP = '192.168.56.255'
 PORT = 5005
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
 
 def generate_measurement(device: str) -> int:
     """
