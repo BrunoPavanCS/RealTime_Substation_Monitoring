@@ -139,9 +139,14 @@ class FilterApp(ctk.CTk):
 
 
     def remove_filter(self, filter_frame: ctk.CTkFrame, device_id: int, filter_index: int) -> None:
-        # Remove o filtro da interface e da estrutura de dados
-        filter_frame.destroy()
-        del self.filters[device_id][filter_index]
+        # Verifica se o índice é válido antes de tentar remover
+        if 0 <= filter_index < len(self.filters[device_id]):
+            # Remove o filtro da interface e da estrutura de dados
+            filter_frame.destroy()
+            del self.filters[device_id][filter_index]
+        else:
+            print(f"Índice {filter_index} fora do alcance para o dispositivo {device_id}")
+
 
     def listen_for_packets(self):
         while True:
@@ -168,6 +173,10 @@ class FilterApp(ctk.CTk):
                 if threshold_achieved != filter_info["state"]:
                     filter_info["state"] = threshold_achieved
                     self.send_filtered_packet(device_id, filter_rule, threshold_achieved, start_time)
+                    
+                    # Atualiza a checkbox na interface para refletir o estado atual
+                    filter_index = sum(len(self.filters[dev]) for dev in range(1, device_id)) + i
+                    self.set_filter_active(filter_index, threshold_achieved)
 
     def evaluate_filter(self, filter_rule: str, measurement: int) -> bool:
         # Realiza parsing do filtro e verifica se a medição cumpre a condição
@@ -293,8 +302,9 @@ class FilterApp(ctk.CTk):
             font=("JetBrains Mono", 15),
             fg_color="#024bbf",
             hover_color="#0073e6",
-            command=lambda: self.remove_filter(filter_row, device_id, filter_index)
+            command=lambda f=filter_row, d=device_id: self.remove_filter(f, d, self.filters[d].index({"filter": rule, "state": False}))
         )
+
         remove_button.pack(side="left", padx=(10, 0))
 
         # Adiciona às listas
@@ -302,6 +312,7 @@ class FilterApp(ctk.CTk):
         self.filter_checkboxes.append(filter_checkbox)
 
     
+
     def set_filter_active(self, index: int, active: bool) -> None:
         if active:
             self.filter_checkboxes[index].select()

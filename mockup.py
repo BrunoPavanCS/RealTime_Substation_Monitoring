@@ -14,23 +14,25 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
 def generate_measurement(device: str) -> int:
     """
-    Generates a simulated current measurement in amps (A) based on the device.
+    Generates a simulated current measurement in amps (A) based on the device,
+    ensuring the value is non-negative.
     
     Parameters:
         device (str): The identifier of the device (e.g., 'Ia', 'Ib', 'Ic', etc.)
         
     Returns:
-        int: The simulated current measurement.
+        int: The simulated current measurement, constrained to be non-negative.
     """
     if device == "Ia" or device == "Ib":
-        return int(random.gauss(3, 1))
+        return max(0, int(random.gauss(3, 1)))
     elif device == "Ic" or device == "Id":
-        return int(random.gauss(8, 1.5))
+        return max(0, int(random.gauss(8, 1.5)))
     elif device == "Ie" or device == "If":
-        return int(random.gauss(13, 2))
+        return max(0, int(random.gauss(13, 2)))
     elif device == "Ig" or device == "Ih":
-        return int(random.gauss(18, 2.5))
+        return max(0, int(random.gauss(18, 2.5)))
     return 0
+
 
 def get_device_id(device: str) -> int:
     """
