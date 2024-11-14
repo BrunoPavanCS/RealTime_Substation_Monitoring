@@ -17,7 +17,7 @@ SEND_PORT = 5006
 
 # Configuração do socket para enviar e receber dados
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # permite reutilizar o endereço
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)  # permite reutilizar o endereço
 
 # Para ouvir pacotes broadcast, o cliente deve escutar no IP broadcast ou em todos os IPs locais ('')
 sock.bind(('', RECEIVE_PORT))
@@ -195,7 +195,7 @@ class FilterApp(ctk.CTk):
             # Calcula e exibe o tempo de processamento em milissegundos
             end_time = time.time()
             processing_time = (end_time - start_time) * 1000
-            print(f"Processing time: {processing_time:.2f} ms")
+            print(f"Processing time: {processing_time:.6f} ms")
         except Exception as e:
             print(f"Erro ao enviar pacote: {e}", file=sys.stderr)
 
